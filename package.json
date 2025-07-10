@@ -9,15 +9,35 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@emotion/cache": "^11.14.0",
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
+    "@material-tailwind/react": "^2.1.10",
+    "@mui/icons-material": "^7.2.0",
+    "@mui/material": "^7.2.0",
+    "@mui/material-nextjs": "^7.2.0",
+    "@mui/x-data-grid": "^8.7.0",
+    "@mui/x-date-pickers": "^8.7.0",
+    "@supabase/ssr": "^0.6.1",
+    "@tailwindcss/line-clamp": "^0.4.4",
+    "@tanstack/react-query": "^5.82.0",
+    "axios": "^1.10.0",
+    "browser-image-compression": "^2.0.2",
+    "cheerio": "^1.1.0",
+    "next": "15.3.5",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "next": "15.3.5"
+    "react-dropzone": "^14.3.8",
+    "react-textarea-autosize": "^8.5.9",
+    "swiper": "^11.2.10",
+    "tailwind-scrollbar-hide": "^4.0.0",
+    "uuid": "^11.1.0"
   },
   "devDependencies": {
+    "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
-    "tailwindcss": "^4",
     "eslint": "^9",
     "eslint-config-next": "15.3.5",
-    "@eslint/eslintrc": "^3"
+    "tailwindcss": "^4"
   }
 }
