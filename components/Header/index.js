@@ -34,7 +34,7 @@ const Header = ({ selectedCategoryId, hasH1 }) => {
       <div className="h-1/6 flex flex-col items-center pb-5 mt-2 relative">
         {/* Logo 영역 */}
         <div className="w-3/5 sm:w-1/2 md:w-[360px]">
-          <a href="/" aria-label="홈으로 이동">
+          <Link href="/" aria-label="홈으로 이동">
             <Image
               src="/images/logo_white.png"
               alt="투데이태백 로고"
@@ -43,7 +43,7 @@ const Header = ({ selectedCategoryId, hasH1 }) => {
               className="w-full h-auto object-contain"
               priority
             />
-          </a>
+          </Link>
         </div>
 
         {/* 날짜 + 사이트명 */}
