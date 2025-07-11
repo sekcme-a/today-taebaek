@@ -12,7 +12,7 @@ export default function AdminPage() {
   useEffect(() => {
     const interval = setInterval(() => {
       setJustify((prev) => (prev === "start" ? "end" : "start"));
-    }, 300); // 1초마다 toggle
+    }, 500); // 1초마다 toggle
 
     return () => clearInterval(interval); // cleanup
   }, []);
@@ -68,12 +68,20 @@ export default function AdminPage() {
       </Button>
       <div className="mt-5">
         <Button
-          onClick={() => router.push("/admin/calculator")}
+          onClick={() => router.push("/admin/electricity/calculator")}
           className="mr-4"
           color="secondary"
           variant="contained"
         >
           전기세 계산기
+        </Button>
+        <Button
+          onClick={() => router.push("/admin/electricity/history")}
+          className="mr-4"
+          color="secondary"
+          variant="contained"
+        >
+          전기세 기록
         </Button>
       </div>
 
@@ -98,9 +106,24 @@ export default function AdminPage() {
       <div
         className={`flex flex-wrap justify-${justify} transition-all duration-500 mt-10`}
       >
-        {Array.from({ length: 1550 }).map((_, i) => (
+        {Array.from({ length: 40 }).map((_, i) => (
+          <p className="text-sm mr-3" key={i}>
+            {`👑 현서 만세! 👑 ヽ(＾Д＾)ﾉ`}
+          </p>
+        ))}
+        {Array.from({ length: 40 }).map((_, i) => (
           <p className="text-sm mr-3" key={i}>
             {`＼(＾▽＾)／  🎉 현서 만세!! 🎉  ＼(＾▽＾)／`}
+          </p>
+        ))}
+        {Array.from({ length: 40 }).map((_, i) => (
+          <p className="text-sm mr-3" key={i}>
+            {`🦀(ง •̀_•́)ง  현서 만세! ٩(๑❛ᴗ❛๑)۶ 🦀`}
+          </p>
+        ))}
+        {Array.from({ length: 40 }).map((_, i) => (
+          <p className="text-sm mr-3" key={i}>
+            {`(｡♥‿♥｡)  현서 만세~!!  (≧◡≦) ♡`}
           </p>
         ))}
       </div>
