@@ -83,6 +83,14 @@ export default function AdminPage() {
         >
           전기세 기록
         </Button>
+        <Button
+          onClick={() => router.push("/admin/noye")}
+          className="mr-4"
+          color="secondary"
+          variant="contained"
+        >
+          노예기간 계산기
+        </Button>
       </div>
 
       <h1 className="mt-32 text-9xl font-bold text-center crazy-text">
