@@ -13,14 +13,14 @@ import {
 } from "recharts";
 
 const Noye = () => {
-  const [P, setP] = useState(""); // 대출금
-  const [r, setr] = useState(""); // 연이자율
-  const [N, setN] = useState(""); // 상환기간
+  const [P, setP] = useState(""); // 대출금 (원)
+  const [r, setr] = useState(""); // 연이자율 (%)
+  const [N, setN] = useState(""); // 상환기간 (개월)
 
   // 추가 납입 관련
   const [extraStart, setExtraStart] = useState(""); // N개월차부터
   const [extraMonths, setExtraMonths] = useState(""); // X개월 동안
-  const [extraAmount, setExtraAmount] = useState(""); // Y만원씩
+  const [extraAmount, setExtraAmount] = useState(""); // 추가금액 (원 단위)
 
   const generateSchedule = () => {
     const principal = parseFloat(P);
@@ -29,7 +29,7 @@ const Noye = () => {
 
     const extraStartMonth = parseInt(extraStart);
     const extraDuration = parseInt(extraMonths);
-    const extra = parseFloat(extraAmount) * 10000; // 만원 → 원
+    const extra = parseFloat(extraAmount); // 원 단위
 
     if (
       isNaN(principal) ||
@@ -44,13 +44,17 @@ const Noye = () => {
 
     const i = annualRate / 1200;
     const pow = Math.pow(1 + i, months);
-    const A = (principal * i * pow) / (pow - 1); // 월 납입금
+    const Araw = (principal * i * pow) / (pow - 1); // 월 납입금 (소수)
+
+    const A = Math.floor(Araw); // 월 납입금 1원 단위 버림
 
     let balance = principal;
     const schedule = [];
 
     for (let m = 1; m <= months && balance > 0; m++) {
-      const interest = balance * i;
+      const interestRaw = balance * i;
+      const interest = Math.floor(interestRaw); // 이자 1원 단위 버림
+
       const principalPayment = A - interest;
 
       // 추가 납입 기간이면 추가 상환
@@ -60,17 +64,20 @@ const Noye = () => {
         m >= extraStartMonth &&
         m < extraStartMonth + extraDuration;
 
-      const extraPayment = isExtraMonth ? extra : 0;
+      const extraPayment =
+        isExtraMonth && !isNaN(extra) ? Math.floor(extra) : 0;
       const totalPrincipal = principalPayment + extraPayment;
 
       balance -= totalPrincipal;
+
+      if (balance < 0) balance = 0; // 잔액 0 이하 방지
 
       schedule.push({
         month: m,
         payment: A + extraPayment,
         interest,
         principal: totalPrincipal,
-        balance: balance > 0 ? balance : 0,
+        balance,
       });
 
       if (balance <= 0) break; // 조기상환 시 종료
@@ -80,11 +87,6 @@ const Noye = () => {
   };
 
   const schedule = generateSchedule();
-
-  const format = (v) =>
-    v.toLocaleString(undefined, {
-      maximumFractionDigits: 2,
-    });
 
   return (
     <div className="p-5 max-w-4xl space-y-4">
@@ -96,6 +98,7 @@ const Noye = () => {
           size="small"
           type="number"
           fullWidth
+          inputProps={{ step: "1", min: "0" }}
         />
         <TextField
           value={r}
@@ -104,6 +107,7 @@ const Noye = () => {
           size="small"
           type="number"
           fullWidth
+          inputProps={{ step: "0.01", min: "0" }}
         />
         <TextField
           value={N}
@@ -112,6 +116,7 @@ const Noye = () => {
           size="small"
           type="number"
           fullWidth
+          inputProps={{ step: "1", min: "1" }}
         />
         <TextField
           value={extraStart}
@@ -120,6 +125,7 @@ const Noye = () => {
           size="small"
           type="number"
           fullWidth
+          inputProps={{ step: "1", min: "1" }}
         />
         <TextField
           value={extraMonths}
@@ -128,14 +134,16 @@ const Noye = () => {
           size="small"
           type="number"
           fullWidth
+          inputProps={{ step: "1", min: "0" }}
         />
         <TextField
           value={extraAmount}
           onChange={(e) => setExtraAmount(e.target.value)}
-          label="매월 추가금액 (만원)"
+          label="매월 추가금액 (원)"
           size="small"
           type="number"
           fullWidth
+          inputProps={{ step: "1", min: "0" }}
         />
       </div>
 
@@ -148,10 +156,16 @@ const Noye = () => {
             <LineChart data={schedule}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="month" />
-              <YAxis tickFormatter={(v) => `${(v / 10000).toFixed(0)}만원`} />
+              <YAxis
+                tickFormatter={(v) => `${(v / 10000).toFixed(0)}만원`}
+                width={80}
+              />
               <Tooltip
                 formatter={(value) =>
-                  `${parseFloat(value).toLocaleString()} 원`
+                  `${value.toLocaleString(undefined, {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0,
+                  })} 원`
                 }
               />
               <Line
@@ -185,24 +199,55 @@ const Noye = () => {
                       {item.month % 12 !== 0 ? ` ${item.month % 12}개월` : ""})
                     </td>
                     <td className="border px-2 py-1">
-                      {(Math.round(item.payment / 100) * 100).toLocaleString()}
+                      {item.payment.toLocaleString()}
                     </td>
                     <td className="border px-2 py-1">
-                      {(Math.round(item.interest / 100) * 100).toLocaleString()}
+                      {item.interest.toLocaleString()}
                     </td>
                     <td className="border px-2 py-1">
-                      {(
-                        Math.round(item.principal / 100) * 100
-                      ).toLocaleString()}
+                      {item.principal.toLocaleString()}
                     </td>
                     <td className="border px-2 py-1">
-                      {(Math.round(item.balance / 100) * 100).toLocaleString()}
+                      {item.balance.toLocaleString()}
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
+
+          {/* 💡 총합 계산 */}
+          {(() => {
+            const totalInterest = schedule.reduce(
+              (acc, cur) => acc + cur.interest,
+              0
+            );
+            const totalPrincipal = schedule.reduce(
+              (acc, cur) => acc + cur.principal,
+              0
+            );
+            const totalPayment = schedule.reduce(
+              (acc, cur) => acc + cur.payment,
+              0
+            );
+
+            return (
+              <div className="bg-gray-100 p-4 rounded text-sm space-y-1 border text-black">
+                <div>
+                  💸 <strong>총 이자 납입:</strong>{" "}
+                  {totalInterest.toLocaleString()} 원
+                </div>
+                <div>
+                  💰 <strong>총 원금 납입:</strong>{" "}
+                  {totalPrincipal.toLocaleString()} 원
+                </div>
+                <div>
+                  🧾 <strong>총 납입 금액:</strong>{" "}
+                  {totalPayment.toLocaleString()} 원
+                </div>
+              </div>
+            );
+          })()}
         </>
       ) : (
         <Typography color="error">유효한 값을 입력해주세요.</Typography>
