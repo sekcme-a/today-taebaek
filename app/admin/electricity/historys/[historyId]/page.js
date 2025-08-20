@@ -19,6 +19,8 @@ const HistoryDetail = () => {
   const [title, setTitle] = useState("");
   const [createdAt, setCreatedAt] = useState("");
   const [rows, setRows] = useState([]);
+  const [rowDetails, setRowDetails] = useState([]);
+  const [columnsDetail, setColumnsDetail] = useState([]);
   useEffect(() => {
     fetchHistoryDetail();
   }, []);
@@ -36,6 +38,16 @@ const HistoryDetail = () => {
     setTitle(data.title);
     setCreatedAt(new Date(data.created_at).toLocaleDateString());
     setRows(data.data || []);
+    setRowDetails(data.data_detail || []);
+    // id 제외하고 컬럼 이름만 가져오기
+    const keys = Object.keys(data.data_detail[0]).filter((k) => k !== "id");
+
+    // columnsDetail 생성
+    const cd = [
+      { field: "id", headerName: "항목", flex: 1 },
+      ...keys.map((key) => ({ field: key, headerName: key, flex: 1 })),
+    ];
+    setColumnsDetail(cd);
   };
 
   return (
@@ -54,11 +66,34 @@ const HistoryDetail = () => {
         slotProps={{
           toolbar: {
             csvOptions: {
-              fileName: `전기세_${new Date().toLocaleDateString()}`,
+              fileName: `전기세_${title}`,
             },
           },
         }}
       />
+      {columnsDetail && (
+        <DataGrid
+          columns={columnsDetail}
+          rows={rowDetails}
+          className="mt-5"
+          showToolbar
+          localeText={muiDataGridKoreanText}
+          slotProps={{
+            toolbar: {
+              csvOptions: {
+                fileName: `전기세_${title}`,
+              },
+            },
+          }}
+          getRowClassName={(params) =>
+            params.row.id === "전기요금계"
+              ? "bg-sky-800"
+              : params.row.id === "총금액"
+              ? "bg-sky-900"
+              : ""
+          }
+        />
+      )}
     </div>
   );
 };

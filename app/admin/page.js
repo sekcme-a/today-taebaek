@@ -68,7 +68,16 @@ export default function AdminPage() {
       </Button>
       <div className="mt-5">
         <Button
-          onClick={() => router.push("/admin/electricity/calculator")}
+          onClick={() => router.push("/admin/rental")}
+          className="mr-4"
+          color="secondary"
+          variant="contained"
+        >
+          월세 매니저
+        </Button>
+
+        <Button
+          onClick={() => router.push("/admin/electricity/calculator2")}
           className="mr-4"
           color="secondary"
           variant="contained"
@@ -76,13 +85,22 @@ export default function AdminPage() {
           전기세 계산기
         </Button>
         <Button
-          onClick={() => router.push("/admin/electricity/history")}
+          onClick={() => router.push("/admin/electricity/historys")}
           className="mr-4"
           color="secondary"
           variant="contained"
         >
           전기세 기록
         </Button>
+        <Button
+          onClick={() => router.push("/admin/electricity/settings")}
+          className="mr-4"
+          color="secondary"
+          variant="contained"
+        >
+          전기세 설정
+        </Button>
+
         <Button
           onClick={() => router.push("/admin/noye")}
           className="mr-4"

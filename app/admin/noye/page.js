@@ -10,6 +10,7 @@ import {
   Tooltip,
   CartesianGrid,
   ResponsiveContainer,
+  Legend,
 } from "recharts";
 
 const Noye = () => {
@@ -17,10 +18,9 @@ const Noye = () => {
   const [r, setr] = useState(""); // 연이자율 (%)
   const [N, setN] = useState(""); // 상환기간 (개월)
 
-  // 추가 납입 관련
-  const [extraStart, setExtraStart] = useState(""); // N개월차부터
-  const [extraMonths, setExtraMonths] = useState(""); // X개월 동안
-  const [extraAmount, setExtraAmount] = useState(""); // 추가금액 (원 단위)
+  const [extraStart, setExtraStart] = useState("");
+  const [extraMonths, setExtraMonths] = useState("");
+  const [extraAmount, setExtraAmount] = useState("");
 
   const generateSchedule = () => {
     const principal = parseFloat(P);
@@ -29,7 +29,7 @@ const Noye = () => {
 
     const extraStartMonth = parseInt(extraStart);
     const extraDuration = parseInt(extraMonths);
-    const extra = parseFloat(extraAmount); // 원 단위
+    const extra = parseFloat(extraAmount);
 
     if (
       isNaN(principal) ||
@@ -44,20 +44,18 @@ const Noye = () => {
 
     const i = annualRate / 1200;
     const pow = Math.pow(1 + i, months);
-    const Araw = (principal * i * pow) / (pow - 1); // 월 납입금 (소수)
-
-    const A = Math.floor(Araw); // 월 납입금 1원 단위 버림
+    const Araw = (principal * i * pow) / (pow - 1);
+    const A = Math.floor(Araw);
 
     let balance = principal;
     const schedule = [];
 
     for (let m = 1; m <= months && balance > 0; m++) {
       const interestRaw = balance * i;
-      const interest = Math.floor(interestRaw); // 이자 1원 단위 버림
+      const interest = Math.floor(interestRaw);
 
       const principalPayment = A - interest;
 
-      // 추가 납입 기간이면 추가 상환
       const isExtraMonth =
         !isNaN(extraStartMonth) &&
         !isNaN(extraDuration) &&
@@ -66,21 +64,27 @@ const Noye = () => {
 
       const extraPayment =
         isExtraMonth && !isNaN(extra) ? Math.floor(extra) : 0;
-      const totalPrincipal = principalPayment + extraPayment;
+
+      let totalPrincipal = principalPayment + extraPayment;
+
+      if (totalPrincipal > balance) {
+        totalPrincipal = balance;
+      }
 
       balance -= totalPrincipal;
+      if (balance < 0) balance = 0;
 
-      if (balance < 0) balance = 0; // 잔액 0 이하 방지
+      const totalPayment = totalPrincipal + interest;
 
       schedule.push({
         month: m,
-        payment: A + extraPayment,
+        payment: totalPayment,
         interest,
         principal: totalPrincipal,
         balance,
       });
 
-      if (balance <= 0) break; // 조기상환 시 종료
+      if (balance <= 0) break;
     }
 
     return schedule;
@@ -149,8 +153,33 @@ const Noye = () => {
 
       {schedule ? (
         <>
+          {/* ✅ 그래프 1: 잔액 */}
           <Typography variant="h6" className="mt-4">
-            📊 상환 그래프 (잔액 기준)
+            📊 상환 그래프 - 잔액
+          </Typography>
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={schedule}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="month" />
+              <YAxis
+                tickFormatter={(v) => `${(v / 10000).toFixed(0)}만원`}
+                width={80}
+              />
+              <Tooltip formatter={(value) => `${value.toLocaleString()} 원`} />
+              <Legend />
+              <Line
+                type="monotone"
+                dataKey="balance"
+                stroke="#8884d8"
+                dot={false}
+                name="잔액"
+              />
+            </LineChart>
+          </ResponsiveContainer>
+
+          {/* ✅ 그래프 2: 원금 + 이자 */}
+          <Typography variant="h6" className="mt-8">
+            📈 매월 납입금 내역 - 원금과 이자
           </Typography>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={schedule}>
@@ -161,22 +190,34 @@ const Noye = () => {
                 width={80}
               />
               <Tooltip
-                formatter={(value) =>
-                  `${value.toLocaleString(undefined, {
-                    minimumFractionDigits: 0,
-                    maximumFractionDigits: 0,
-                  })} 원`
-                }
+                formatter={(value, name) => [
+                  `${value.toLocaleString()} 원`,
+                  name === "principal"
+                    ? "원금"
+                    : name === "interest"
+                    ? "이자"
+                    : name,
+                ]}
+              />
+              <Legend />
+              <Line
+                type="monotone"
+                dataKey="principal"
+                stroke="#82ca9d"
+                dot={false}
+                name="원금"
               />
               <Line
                 type="monotone"
-                dataKey="balance"
-                stroke="#8884d8"
+                dataKey="interest"
+                stroke="#ff7f7f"
                 dot={false}
+                name="이자"
               />
             </LineChart>
           </ResponsiveContainer>
 
+          {/* ✅ 스케줄 테이블 */}
           <Typography variant="h6" className="mt-4">
             상환 스케줄
           </Typography>
@@ -216,7 +257,7 @@ const Noye = () => {
             </table>
           </div>
 
-          {/* 💡 총합 계산 */}
+          {/* ✅ 총합 정보 */}
           {(() => {
             const totalInterest = schedule.reduce(
               (acc, cur) => acc + cur.interest,

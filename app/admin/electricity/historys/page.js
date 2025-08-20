@@ -41,7 +41,7 @@ const History = () => {
               className="border p-4 rounded flex justify-between items-center
               hover:bg-gray-800 transition-colors duration-200 cursor-pointer"
               onClick={() => {
-                router.push(`/admin/electricity/history/${item.id}`);
+                router.push(`/admin/electricity/historys/${item.id}`);
               }}
             >
               <h2 className="text-xl font-semibold">{item.title}</h2>
