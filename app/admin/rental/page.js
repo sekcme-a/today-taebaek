@@ -83,7 +83,9 @@ export default function RentManagement() {
     const { data, error } = await supabase
       .from("rentals")
       .select("*")
-      .order("room_number", { ascending: true });
+      // .order("room_number", { ascending: true })
+      .order("building_name", { ascending: true });
+
     if (error) {
       console.error("Error fetching rentals:", error);
       return;
@@ -316,7 +318,6 @@ export default function RentManagement() {
           <TextField
             label="인원"
             name="occupants"
-            type="number"
             value={formData.occupants || ""}
             onChange={handleChange}
             fullWidth
@@ -325,7 +326,6 @@ export default function RentManagement() {
           <TextField
             label="월세 가격"
             name="rent_price"
-            type="number"
             value={formData.rent_price || ""}
             onChange={handleChange}
             fullWidth
@@ -352,7 +352,6 @@ export default function RentManagement() {
           <TextField
             label="보증금"
             name="deposit"
-            type="number"
             value={formData.deposit || ""}
             onChange={handleChange}
             fullWidth
@@ -370,7 +369,6 @@ export default function RentManagement() {
           <TextField
             label="입금일 (매달)"
             name="payment_day"
-            type="number"
             value={formData.payment_day || ""}
             onChange={handleChange}
             fullWidth
@@ -392,7 +390,15 @@ export default function RentManagement() {
             onChange={handleChange}
             fullWidth
             multiline
-            rows={4}
+            rows={6}
+            margin="normal"
+          />
+          <TextField
+            label="방 ID (화이트:1, 블루:2, 그린:3, 오렌지: 4)+방호수. 예)블루202호 -> 2202"
+            name="building_name"
+            value={formData.building_name || ""}
+            onChange={handleChange}
+            fullWidth
             margin="normal"
           />
         </DialogContent>
