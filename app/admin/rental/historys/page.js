@@ -151,7 +151,7 @@ export default function RentalHistory() {
         slotProps={{
           toolbar: {
             csvOptions: {
-              fileName: `월세 기록`,
+              fileName: `월세 기록 `,
             },
           },
         }}
