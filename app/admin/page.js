@@ -75,6 +75,14 @@ export default function AdminPage() {
         >
           월세 매니저
         </Button>
+        <Button
+          onClick={() => router.push("/admin/rental/historys")}
+          className="mr-4"
+          color="secondary"
+          variant="contained"
+        >
+          월세 기록
+        </Button>
 
         <Button
           onClick={() => router.push("/admin/electricity/calculator2")}

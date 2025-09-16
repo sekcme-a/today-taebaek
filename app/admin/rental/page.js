@@ -12,11 +12,12 @@ import {
   DialogActions,
 } from "@mui/material";
 import { muiDataGridKoreanText } from "../electricity/calculator/muiDataGridKo";
+import { createBrowserSupabaseClient } from "@/utils/supabase/client";
 
-// Supabase 클라이언트 초기화
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// // Supabase 클라이언트 초기화
+// const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+// const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+// const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 const columns = [
   { field: "room_number", headerName: "방 호수", width: 100 },
@@ -57,10 +58,15 @@ const columns = [
 ];
 
 export default function RentManagement() {
+  const supabase = createBrowserSupabaseClient();
   const [rows, setRows] = useState([]);
   const [open, setOpen] = useState(false);
   const [formData, setFormData] = useState({});
   const [editingId, setEditingId] = useState(null);
+
+  const [saveDialogOpen, setSaveDialogOpen] = useState(false);
+  const [title, setTitle] = useState("");
+  const [memo, setMemo] = useState("");
 
   // 🐛 디버깅을 위해 현재 날짜를 저장하는 상태 추가
   const [mockDate, setMockDate] = useState(new Date());
@@ -83,9 +89,8 @@ export default function RentManagement() {
   const fetchRentalsAndProcess = async () => {
     const { data, error } = await supabase
       .from("rentals")
-      .select("*")
+      .select()
       .order("building_name", { ascending: true });
-
     if (error) {
       console.error("Error fetching rentals:", error);
       return;
@@ -441,6 +446,14 @@ export default function RentManagement() {
               >
                 방 삭제
               </Button>
+              <Button
+                onClick={() => setSaveDialogOpen(true)}
+                color="secondary"
+                variant="outlined"
+                sx={{ mr: 1 }}
+              >
+                월세 기록 저장
+              </Button>
             </>
           )}
           <Button onClick={handleClose}>취소</Button>
@@ -448,6 +461,53 @@ export default function RentManagement() {
             {editingId ? "저장" : "추가"}
           </Button>
         </DialogActions>
+      </Dialog>
+
+      <Dialog open={saveDialogOpen} onClose={() => setSaveDialogOpen(false)}>
+        <DialogTitle>월세 기록 저장</DialogTitle>
+        <DialogContent>
+          <TextField
+            label="제목"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            fullWidth
+            sx={{ mt: 2 }}
+          />
+          <TextField
+            label="메모"
+            value={memo}
+            onChange={(e) => setMemo(e.target.value)}
+            fullWidth
+            multiline
+            rows={4}
+            sx={{ mt: 2 }}
+          />
+          <Button
+            variant="contained"
+            sx={{ mt: 2, mb: 2 }}
+            onClick={async () => {
+              try {
+                const { error } = await supabase
+                  .from("rental_historys")
+                  .insert({
+                    ...formData,
+                    title: title,
+                    additional_memo: memo,
+                  });
+                if (error) throw error;
+                alert("저장되었도다");
+                setSaveDialogOpen(false);
+                setTitle("");
+                setMemo("");
+              } catch (error) {
+                alert(error.message);
+                console.error("Error saving rental history:", error);
+              }
+            }}
+          >
+            저장
+          </Button>
+        </DialogContent>
       </Dialog>
     </div>
   );
