@@ -72,20 +72,42 @@ const Calculator = () => {
       )
       .sort((a, b) => new Date(a.used_at) - new Date(b.used_at));
 
-    let monthlyUsage = {};
+    // 시작/끝 포함해서 계산할 레코드 배열
     const records = [
       start,
       ...filtered.filter((f) => f.id !== start.id && f.id !== end.id),
       end,
     ];
 
+    let monthlyUsage = {};
+
     for (let i = 0; i < records.length - 1; i++) {
       const current = records[i];
       const next = records[i + 1];
+
+      // 두 지점 사용량 차이
       const used = next.kwh - current.kwh;
-      const month = new Date(next.used_at).getMonth() + 1;
-      monthlyUsage[month] = (monthlyUsage[month] || 0) + used;
+
+      const curDate = new Date(current.used_at);
+      const nextDate = new Date(next.used_at);
+
+      // ✅ next가 "그 달의 1일"인 경우 → 분리 기준으로 사용
+      if (nextDate.getDate() === 1) {
+        const month = curDate.getMonth() + 1;
+        monthlyUsage[month] = (monthlyUsage[month] || 0) + used;
+      }
+      // ✅ current가 "그 달의 1일"인 경우 → 다음 달 사용량으로 처리
+      else if (curDate.getDate() === 1) {
+        const month = curDate.getMonth() + 1;
+        monthlyUsage[month] = (monthlyUsage[month] || 0) + used;
+      }
+      // ✅ 일반 구간은 그냥 next의 달로 처리
+      else {
+        const month = nextDate.getMonth() + 1;
+        monthlyUsage[month] = (monthlyUsage[month] || 0) + used;
+      }
     }
+
     return monthlyUsage;
   };
 
@@ -171,6 +193,10 @@ const Calculator = () => {
           fund = 0,
           total_kwh = 0;
 
+        // ✅ 기본요금, TV수신료는 전체에서 1번만 적용
+        let basicPriceTotal = 0;
+        let tvTotal = 0;
+
         const monthlyTotals = [];
         const energyArr = [];
         const gihuArr = [];
@@ -181,12 +207,15 @@ const Calculator = () => {
         const fundArr = [];
         const totalBeforeTaxArr = [];
 
+        // 월별 요금 계산 (기본요금, TV 제외)
         Object.entries(monthlyUsage).forEach(([monthStr, kwhUsed]) => {
           const month = parseInt(monthStr);
           const setting = settings.find((s) => s.month === month);
-          if (!setting) return;
+          if (!setting) {
+            console.warn(`${month}월의 요금 설정이 없습니다.`);
+            return;
+          }
 
-          // 기본요금, TV수신료는 제외
           const en = Math.floor(kwhUsed * setting.price_per_kwh);
           const gi = Math.floor(kwhUsed * setting.gihu);
           const fu = Math.floor(kwhUsed * setting.fuel);
@@ -194,6 +223,7 @@ const Calculator = () => {
           const gg = Math.floor(subtotal * (setting.gonggong / 100));
           const fuFund = Math.floor(subtotal * (setting.fund / 100));
 
+          // ⚡ 기본요금, TV수신료는 월별로 더하지 않음 (전체에서 1회 적용)
           const totalBeforeTaxM = en + gi + fu + gg;
           const vatM = Math.floor(totalBeforeTaxM * 0.1);
           const totalM = Math.floor(totalBeforeTaxM + vatM + fuFund);
@@ -214,41 +244,54 @@ const Calculator = () => {
           gonggong += gg;
           fund += fuFund;
           total_kwh += kwhUsed;
+
+          // ✅ 하나의 월 설정값에서 기본요금과 TV를 1번만 가져옴
+          if (basicPriceTotal === 0) {
+            basicPriceTotal = setting.basic_price;
+          }
+          if (tvTotal === 0) {
+            tvTotal = setting.tv;
+          }
         });
 
-        // ⚡ 기본요금, TV수신료는 한 번만
-        const basic_price = settings[0]?.basic_price || 0;
-        const tv = settings[0]?.tv || 0;
+        const vat = Math.floor(
+          (basicPriceTotal + energy + gihu + fuel + gonggong) * 0.1
+        );
+        const finalTotal =
+          Math.floor(
+            (basicPriceTotal +
+              energy +
+              gihu +
+              fuel +
+              gonggong +
+              vat +
+              fund +
+              tvTotal) /
+              10
+          ) * 10;
 
-        const totalBeforeTax = basic_price + energy + gihu + fuel + gonggong;
-        const vat = Math.floor(totalBeforeTax * 0.1);
-        const total = Math.floor((totalBeforeTax + vat + fund + tv) / 10) * 10;
-
-        const displayTotal =
-          monthlyTotals.length > 1
-            ? `${numberFormat(total)} (${monthlyTotals.join("+")})`
-            : numberFormat(total);
+        const displayTotal = numberFormat(finalTotal);
 
         newRows.push({
           id: `${room}_${Date.now()}`,
           room,
           kwh: total_kwh,
-          price: numberFormat(total),
+          price: numberFormat(finalTotal),
         });
 
         detailData["전력사용량(kWh)"][room] = withDetail(total_kwh, kwhArr);
-        detailData["기본요금"][room] = numberFormat(basic_price);
+        detailData["기본요금"][room] = numberFormat(basicPriceTotal); // ✅ 1번만
         detailData["전력량요금"][room] = withDetail(energy, energyArr);
         detailData["기후환경요금"][room] = withDetail(gihu, gihuArr);
         detailData["연료비조정액"][room] = withDetail(fuel, fuelArr);
         detailData["공공전기요금"][room] = withDetail(gonggong, gonggongArr);
-        detailData["전기요금계"][room] = withDetail(
-          totalBeforeTax,
+        detailData["전기요금계"][room] = numberFormat(
+          energy + gihu + fuel + gonggong + basicPriceTotal,
           totalBeforeTaxArr
         );
-        detailData["부가가치세"][room] = withDetail(vat, vatArr);
+        detailData["부가가치세"][room] = numberFormat(vat, vatArr);
         detailData["전력기금"][room] = withDetail(fund, fundArr);
-        detailData["TV수신료"][room] = numberFormat(tv);
+        detailData["TV수신료"][room] = numberFormat(tvTotal); // ✅ 1번만
         detailData["총금액(1원단위 절사)"][room] = displayTotal;
       }
     );
@@ -282,7 +325,7 @@ const Calculator = () => {
             {roomUsage[room] && (
               <strong>
                 {Object.entries(roomUsage[room])
-                  .map(([m, u]) => `${m}월 ${u}kWh`)
+                  .map(([m, u]) => `${m}월 ${numberFormat(u)}kWh`)
                   .join(", ")}
               </strong>
             )}
@@ -377,6 +420,7 @@ const Calculator = () => {
         <DialogTitle>{openDialog} 전기 측정 선택</DialogTitle>
         <DialogContent>
           <p className="font-bold">측정 기록 선택 (시작/종료)</p>
+          <p className="font-bold">*반드시 1달씩 측정해주세요!</p>
           <div className="mt-2 space-y-1">
             {(roomHistories[openDialog] || []).map((item, index) => (
               <div className="flex" key={index}>

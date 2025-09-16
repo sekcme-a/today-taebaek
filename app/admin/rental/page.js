@@ -11,6 +11,7 @@ import {
   TextField,
   DialogActions,
 } from "@mui/material";
+import { muiDataGridKoreanText } from "../electricity/calculator/muiDataGridKo";
 
 // Supabase 클라이언트 초기화
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -83,7 +84,6 @@ export default function RentManagement() {
     const { data, error } = await supabase
       .from("rentals")
       .select("*")
-      // .order("room_number", { ascending: true })
       .order("building_name", { ascending: true });
 
     if (error) {
@@ -129,7 +129,8 @@ export default function RentManagement() {
       } else {
         const { data: updatedData } = await supabase
           .from("rentals")
-          .select("*");
+          .select("*")
+          .order("building_name", { ascending: true });
         setRows(updatedData);
         return;
       }
@@ -286,6 +287,15 @@ export default function RentManagement() {
         onRowClick={handleRowClick}
         getRowId={(row) => row.id}
         getRowClassName={getRowClassName}
+        localeText={muiDataGridKoreanText}
+        showToolbar
+        slotProps={{
+          toolbar: {
+            csvOptions: {
+              fileName: `월세 현황_${new Date().toLocaleDateString()}`,
+            },
+          },
+        }}
       />
 
       <Dialog open={open} onClose={handleClose}>
