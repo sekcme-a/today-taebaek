@@ -124,11 +124,13 @@ export default function RentalHistory() {
       width: 100,
       getActions: (params) => [
         <GridActionsCellItem
+          key="edit"
           icon={<EditIcon />}
           label="Edit"
           onClick={() => handleEdit(params.row)}
         />,
         <GridActionsCellItem
+          key="delete"
           icon={<DeleteIcon />}
           label="Delete"
           onClick={() => handleDelete(params.id)}
