@@ -51,7 +51,7 @@ export default function RootLayout({ children }) {
       </head>
       <body
         className={[
-          `${inter.className} bg-[#343541] text-white vsc-initialized`,
+          `${inter.className} bg-[#1f1f1f] text-white vsc-initialized`,
         ]}
       >
         <AppRouterCacheProvider options={{ enableCssLayer: true }}>
