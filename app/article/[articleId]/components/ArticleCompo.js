@@ -22,6 +22,7 @@ const ArticleCompo = ({ article }) => {
   let lastIndex = 0;
   let match;
   let key = 0;
+  console.log(article.content);
 
   while ((match = regex.exec(article.content)) !== null) {
     const [fullMatch, imageIndexStr, description] = match;

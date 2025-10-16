@@ -23,7 +23,7 @@ export default function Comments({ articleId }) {
     pageSize: 5,
     sort: "최신순",
   });
-  const addComment = useAddComment(articleId);
+  const addComment = useAddComment({ articleId });
   const [newContent, setNewContent] = useState("");
 
   const handleAdd = () => {

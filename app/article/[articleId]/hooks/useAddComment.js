@@ -17,7 +17,10 @@ export function useAddComment({ articleId, parentCommentId, isChildComment }) {
         })
         .select("*")
         .single();
-      if (error) throw error;
+      if (error) {
+        console.log(error);
+        throw error;
+      }
       return data;
     },
     onSuccess: (newComment) => {

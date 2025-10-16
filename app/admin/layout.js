@@ -9,7 +9,7 @@ export default async function AdminLayout({ children }) {
   } = await supabase?.auth?.getSession();
 
   if (!session) {
-    redirect("/admin-login");
+    redirect("/login");
   }
 
   const { data: member } = await supabase
