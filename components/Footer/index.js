@@ -7,11 +7,12 @@ const Footer = () => {
     "주소 - 강원특별자치 태백시 석공길28-14(장성동)",
     "전화 - 010-5339-6943",
     "발행인 - 김균식",
+    "편집인 - 김균식",
+    "청소년보호책임자 - 김균식",
   ];
   const FOOTER_TWO = [
     "사업자명 - 투데이 태백",
     "사업자등록번호 - 268-06-03022",
-    "대표자명 - 김균식",
   ];
   return (
     <footer className="flex flex-col md:flex-row border-t-2 border-white pt-4 px-2 pb-14 items-center mt-5">
